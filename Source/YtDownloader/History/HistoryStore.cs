@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using YtDownloader.Configuration;
 using YtDownloader.Download;
+using YtDownloader.Metadata;
 using YtDownloader.Urls;
 
 namespace YtDownloader.History;
@@ -33,7 +34,19 @@ public sealed class HistoryStore
         Load().Any(entry => entry.Url == url.ToString() && entry.Status == DownloadStatus.Done);
 
     public IReadOnlyList<HistoryEntry> Unfinished() =>
-        Load().Where(entry => entry.Status != DownloadStatus.Done).ToList();
+        Load().Where(entry => entry.Status is DownloadStatus.Failed or DownloadStatus.Scheduled).ToList();
+
+    public IReadOnlyList<HistoryEntry> StaleDownloading() =>
+        Load().Where(entry => entry.Status == DownloadStatus.Downloading
+                           && entry.DownloadDate < DateTimeOffset.Now.AddHours(-1)).ToList();
+
+    public void RecordDownloading(VideoUrl url, VideoMetadata metadata)
+    {
+        List<HistoryEntry> entries = Load();
+        entries.RemoveAll(entry => entry.Url == url.ToString());
+        entries.Add(new HistoryEntry(url.Original(), url.ToString(), metadata.Title(), metadata.Channel(), DateTimeOffset.Now, DownloadStatus.Downloading, null));
+        Write(entries);
+    }
 
     public void Record(VideoUrl url, DownloadResult result)
     {

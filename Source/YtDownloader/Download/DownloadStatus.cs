@@ -4,5 +4,6 @@ public enum DownloadStatus
 {
     Done,
     Failed,
-    Scheduled
+    Scheduled,
+    Downloading
 }

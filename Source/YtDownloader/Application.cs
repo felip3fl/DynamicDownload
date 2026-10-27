@@ -36,7 +36,8 @@ public sealed class Application
         CommandLine commandLine = new(arguments);
         CommandRunner runner = new();
         VideoUrl url = new UrlResolver(commandLine, new ClipboardReader(runner)).Resolve();
-        DownloadWorkflow workflow = new(new VideoDownloader(settings, runner), new HistoryStore(settings), settings);
+        HistoryStore historyStore = new(settings);
+        DownloadWorkflow workflow = new(new VideoDownloader(settings, runner, historyStore), historyStore, settings);
         DownloadStatus status = workflow.Run(url, commandLine.Quality(settings.DefaultQuality));
         return status == DownloadStatus.Failed ? Fail("Download failed after all attempts") : 0;
     }

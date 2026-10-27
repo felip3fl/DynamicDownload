@@ -1,4 +1,5 @@
 using YtDownloader.Configuration;
+using YtDownloader.History;
 using YtDownloader.Metadata;
 using YtDownloader.Shell;
 using YtDownloader.Urls;
@@ -9,11 +10,13 @@ public sealed class VideoDownloader
 {
     private readonly AppSettings settings;
     private readonly CommandRunner runner;
+    private readonly HistoryStore history;
 
-    public VideoDownloader(AppSettings settings, CommandRunner runner)
+    public VideoDownloader(AppSettings settings, CommandRunner runner, HistoryStore history)
     {
         this.settings = settings;
         this.runner = runner;
+        this.history = history;
     }
 
     public DownloadResult Download(VideoUrl url, int quality)
@@ -43,7 +46,10 @@ public sealed class VideoDownloader
     private DownloadResult Execute(VideoUrl url, int quality)
     {
         VideoMetadata metadata = new MetadataProbe(runner).Fetch(url);
-        return metadata.IsUpcoming() ? DownloadResult.Scheduled(metadata) : Fetch(url, metadata, quality);
+        if (metadata.IsUpcoming())
+            return DownloadResult.Scheduled(metadata);
+        history.RecordDownloading(url, metadata);
+        return Fetch(url, metadata, quality);
     }
 
     private DownloadResult Fetch(VideoUrl url, VideoMetadata metadata, int quality)

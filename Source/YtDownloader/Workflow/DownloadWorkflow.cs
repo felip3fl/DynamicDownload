@@ -52,6 +52,9 @@ public sealed class DownloadWorkflow
     {
         foreach (HistoryEntry entry in history.Unfinished())
             Retry(entry);
+
+        foreach (HistoryEntry entry in history.StaleDownloading())
+            RetryStale(entry);
     }
 
     private void Retry(HistoryEntry entry)
@@ -60,6 +63,15 @@ public sealed class DownloadWorkflow
             return;
 
         Console.WriteLine($"Retrying unfinished video from history: {entry.Url}");
+        history.Record(url!, downloader.Download(url!, settings.DefaultQuality));
+    }
+
+    private void RetryStale(HistoryEntry entry)
+    {
+        if (!VideoUrl.TryParse(entry.OriginalUrl, out VideoUrl? url))
+            return;
+
+        Console.WriteLine($"Retrying stale download from history (started {entry.DownloadDate:g}): {entry.Url}");
         history.Record(url!, downloader.Download(url!, settings.DefaultQuality));
     }
 }
