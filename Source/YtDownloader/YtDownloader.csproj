@@ -1,15 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>YtDownloader</RootNamespace>
+    <Version>1.0.4</Version>
   </PropertyGroup>
-
   <ItemGroup>
     <None Update="appsettings.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
-
+  <!--
+    Post-build target: increments the patch segment of <Version> in this .csproj
+    after every successful build so the number advances automatically.
+  -->
+  <Target Name="IncrementPatchVersion" AfterTargets="Build">
+    <PropertyGroup>
+      <_VersionParts>$(Version.Split('.'))</_VersionParts>
+      <_Major>$(Version.Split('.')[0])</_Major>
+      <_Minor>$(Version.Split('.')[1])</_Minor>
+      <_Patch>$(Version.Split('.')[2])</_Patch>
+      <_NewPatch>$([MSBuild]::Add($(_Patch), 1))</_NewPatch>
+      <_NewVersion>$(_Major).$(_Minor).$(_NewPatch)</_NewVersion>
+    </PropertyGroup>
+    <XmlPoke XmlInputPath="$(MSBuildProjectFullPath)" Query="/Project/PropertyGroup/Version" Value="$(_NewVersion)" />
+    <Message Importance="high" Text="Version bumped: $(Version) → $(_NewVersion)" />
+  </Target>
 </Project>

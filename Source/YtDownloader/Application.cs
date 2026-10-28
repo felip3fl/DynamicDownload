@@ -20,6 +20,8 @@ public sealed class Application
     public int Run()
     {
         Console.OutputEncoding = Encoding.UTF8;
+        string version = typeof(Application).Assembly.GetName().Version?.ToString(3) ?? "?";
+        Console.Title = $"YtDownloader v{version}";
         try
         {
             return Execute();
