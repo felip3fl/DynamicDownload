@@ -33,7 +33,7 @@ public sealed class DownloadWorkflow
     private DownloadStatus Download(VideoUrl url, int quality)
     {
         DownloadResult result = downloader.Download(url, quality);
-        history.Record(url, result);
+        UpdateHistory(url, result);
         Announce(result);
 
         if (result.IsDone())
@@ -63,7 +63,7 @@ public sealed class DownloadWorkflow
             return;
 
         Console.WriteLine($"Retrying unfinished video from history: {entry.Url}");
-        history.Record(url!, downloader.Download(url!, settings.DefaultQuality));
+        UpdateHistory(url!, downloader.Download(url!, settings.DefaultQuality));
     }
 
     private void RetryStale(HistoryEntry entry)
@@ -72,6 +72,14 @@ public sealed class DownloadWorkflow
             return;
 
         Console.WriteLine($"Retrying stale download from history (started {entry.DownloadDate:g}): {entry.Url}");
-        history.Record(url!, downloader.Download(url!, settings.DefaultQuality));
+        UpdateHistory(url!, downloader.Download(url!, settings.DefaultQuality));
+    }
+
+    private void UpdateHistory(VideoUrl url, DownloadResult result)
+    {
+        if (result.IsDone())
+            history.Remove(url);
+        else
+            history.Record(url, result);
     }
 }

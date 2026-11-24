@@ -48,8 +48,21 @@ public sealed class HistoryStore
         Write(entries);
     }
 
+    public void Remove(VideoUrl url)
+    {
+        List<HistoryEntry> entries = Load();
+        if (entries.RemoveAll(entry => entry.Url == url.ToString()) > 0)
+            Write(entries);
+    }
+
     public void Record(VideoUrl url, DownloadResult result)
     {
+        if (result.IsDone())
+        {
+            Remove(url);
+            return;
+        }
+
         List<HistoryEntry> entries = Load();
         entries.RemoveAll(entry => entry.Url == url.ToString());
         entries.Add(HistoryEntry.From(url, result));

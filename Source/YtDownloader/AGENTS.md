@@ -27,7 +27,7 @@ Program.cs → Application.Run()
           → AvailabilityReport.Print()
           → yt-dlp with DownloadArguments → temp folder per video ID
           → FileMover: moves files from temp folder → DestinationFolder
-      → HistoryStore.Record()
+      → HistoryStore.Remove() on Done / HistoryStore.Record() on Failed or Scheduled
       → Retry all Unfinished history entries
 ```
 
@@ -50,7 +50,7 @@ Program.cs → Application.Run()
 - Error handling: throw exceptions to bubble up to `Application.Run()` which catches and returns exit code 1
 
 ## Key Domain Rules
-- A video is considered "done" only if `HistoryStore.IsDone()` finds `Status == DownloadStatus.Done` for the cleaned URL
+- Finished downloads (`DownloadStatus.Done`) are not added to the history JSON; when a download succeeds, any existing entry for that URL is removed from the file
 - `DownloadStatus.Scheduled` means the video is a future premiere — it is saved to history but not downloaded
 - After a successful download, `DownloadWorkflow` automatically retries all `Unfinished` (non-Done) history entries
 - Audio selection in `FormatExpression`: prefers explicit original + dubbed audio track IDs; falls back to `+ba`
